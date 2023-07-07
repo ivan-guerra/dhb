@@ -2,7 +2,9 @@
 #include <unistd.h>
 
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 
@@ -67,17 +69,17 @@ int main(int argc, char** argv) {
     /* parse program options */
     int opt = '\0';
     int long_index = 0;
-    std::string grouping;
-    std::string width;
+    std::string grouping_str;
+    std::string width_str;
     while (-1 != (opt = getopt_long(argc, argv, "hg:w:",
                                     static_cast<struct option*>(long_options),
                                     &long_index))) {
         switch (opt) {
             case 'g':
-                grouping = optarg;
+                grouping_str = optarg;
                 break;
             case 'w':
-                width = optarg;
+                width_str = optarg;
                 break;
             case 'h':
                 PrintUsage();
@@ -103,11 +105,21 @@ int main(int argc, char** argv) {
         std::string tgt_base_str(argv[optind + 1]);
         std::string num(argv[optind + 2]);
 
+        /* identify the source and target bases */
         dhb::NumSystem src_base = GetNumSystem(src_base_str);
         dhb::NumSystem tgt_base = GetNumSystem(tgt_base_str);
-        std::cout << dhb::ConvertBase(num, src_base, tgt_base);
+
+        /* perform the base conversion */
+        std::string converted_num = dhb::ConvertBase(num, src_base, tgt_base);
+        std::stringstream ss(converted_num);
+
+        /* adjust the width of the converted number */
+        int width = width_str.empty() ? 0 : std::stoi(width_str);
+        ss << std::setfill('0') << std::setw(width) << converted_num;
+
+        std::cout << ss.str() << std::endl;
     } catch (const std::invalid_argument& e) {
-        PrintErrAndExit("format of input num is invalid");
+        PrintErrAndExit("invalid number format, check input and arg nums");
     } catch (const std::logic_error& e) {
         PrintErrAndExit("invalid base value '" + std::string(e.what()) + "'");
     } catch (const std::exception& e) {
