@@ -1,5 +1,6 @@
 #!/bin/bash
 
+BUILD_DOCS="OFF"
 BUILD_TYPE="Release"
 
 source config.sh
@@ -11,6 +12,7 @@ Help()
     echo "usage: build.sh [OPTION]..."
     echo "options:"
     echo -e "\tg    enable debug info"
+    echo -e "\td    build project docs"
     echo -e "\th    print this help message"
 }
 
@@ -22,6 +24,7 @@ Main()
     pushd $DHB_BUILD_DIR > /dev/null
         cmake ../ \
               -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+              -DBUILD_DOCS=$BUILD_DOCS \
               -DCMAKE_BUILD_TYPE=$BUILD_TYPE && \
         make -j$(nproc) all                  && \
         make install
@@ -38,6 +41,7 @@ while getopts ":hgdt" flag
 do
     case "$flag" in
         g) BUILD_TYPE="Debug";;
+        d) BUILD_DOCS="ON";;
         h) Help
            exit;;
        \?) echo "error: invalid option '$OPTARG'"
