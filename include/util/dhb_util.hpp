@@ -44,6 +44,16 @@ std::string GroupDigits(const std::string& num, int grouping);
  */
 std::string SetWidth(const std::string& num, int width);
 
+/**
+ * Strip a hexadecimal (0x) or binary (0b) prefix.
+ *
+ * @param [in] num A hexadecimal or binary string.
+ *
+ * @returns A new string copy of \p num with any prefixes removed. If \p num
+ *          did not have a prefix, StripPrefix() returns \p num.
+ */
+std::string StripPrefix(const std::string& num);
+
 }  // namespace dhb
 
 #endif

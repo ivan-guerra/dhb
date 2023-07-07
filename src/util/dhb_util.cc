@@ -71,4 +71,19 @@ std::string SetWidth(const std::string& num, int width) {
     return ss.str();
 }
 
+std::string StripPrefix(const std::string& num) {
+    const std::size_t kCommonPrefixLen = 2;
+    const std::string kHexPrefix("0x");
+    const std::string kBinPrefix("0b");
+    if (num.size() <= kCommonPrefixLen) {
+        return num;
+    }
+
+    std::string prefix = num.substr(0, kCommonPrefixLen);
+    if ((kHexPrefix == prefix) || (kBinPrefix == prefix)) {
+        return num.substr(prefix.size());
+    }
+    return num;
+}
+
 }  // namespace dhb

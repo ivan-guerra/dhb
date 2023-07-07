@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
         dhb::NumSystem tgt_base = dhb::GetNumSystem(tgt_base_str);
 
         /* perform the base conversion */
+        num = dhb::StripPrefix(num);
         std::string converted_num = dhb::ConvertBase(num, src_base, tgt_base);
 
         /* adjust the width of the converted number */
