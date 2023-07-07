@@ -1,7 +1,118 @@
-#include <iostream>
+#include <getopt.h>
+#include <unistd.h>
 
-int main() {
-    std::cout << "hello world" << std::endl;
+#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+
+#include "base_conversions/base_conversions.hpp"
+
+static void PrintUsage() {
+    std::cout << "usage: dhb [OPTION]... SRC_BASE TGT_BASE NUM" << std::endl;
+    std::cout << "convert between numbers in decimal, binary, or hexadecimal"
+              << std::endl
+              << std::endl;
+
+    std::cout << "REQUIRED ARGUMENTS" << std::endl;
+    std::cout
+        << "\tSRC_BASE\n\t\tinput number base, one of 'bin', 'dec', or 'hex'"
+        << std::endl;
+    std::cout
+        << "\tTGT_BASE\n\t\toutput number base, one of 'bin', 'dec', or 'hex'"
+        << std::endl;
+
+    std::cout << "OPTIONS" << std::endl;
+    std::cout << "\t-g,--grouping\n\t\thow to visually group the digits in the "
+                 "output number (default\n\t\tbehavior is to concatenate all "
+                 "digits)"
+              << std::endl;
+    std::cout << "\t-w,--width\n\t\tminimum number of digits in the output"
+              << std::endl;
+    std::cout << "\t-h,--help\n\t\tprint this help message" << std::endl;
+
+    std::cout << "EXAMPLES" << std::endl;
+    std::cout << "\tdhb hex dec 0xDEADBEED --> 3735928559" << std::endl;
+    std::cout << "\tdhb dec bin 42 --> 101010" << std::endl;
+    std::cout << "\tdhb -g 4 dec hex 3735928559 --> DEAD BEEF" << std::endl;
+    std::cout << "\tdhb -g 4 -w 12 dec hex 3735928559 --> 0000 DEAD BEEF"
+              << std::endl;
+}
+
+static void PrintErrAndExit(const std::string& err) {
+    std::cerr << "error: " << err << std::endl;
+    std::cerr << "try 'dhb --help' for more information" << std::endl;
+    exit(EXIT_FAILURE);
+}
+
+static dhb::NumSystem GetNumSystem(const std::string& base) {
+    static const std::unordered_map<std::string, dhb::NumSystem>
+        kNumSystemLookup = {
+            {"bin", dhb::kBin}, {"dec", dhb::kDec}, {"hex", dhb::kHex}};
+
+    if (!kNumSystemLookup.count(base)) {
+        throw std::logic_error(base);
+    }
+    return kNumSystemLookup.at(base);
+}
+
+int main(int argc, char** argv) {
+    struct option long_options[] = {
+        {"grouping", required_argument, 0, 'g'},
+        {"width", required_argument, 0, 'w'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0},
+    };
+
+    /* parse program options */
+    int opt = '\0';
+    int long_index = 0;
+    std::string grouping;
+    std::string width;
+    while (-1 != (opt = getopt_long(argc, argv, "hg:w:",
+                                    static_cast<struct option*>(long_options),
+                                    &long_index))) {
+        switch (opt) {
+            case 'g':
+                grouping = optarg;
+                break;
+            case 'w':
+                width = optarg;
+                break;
+            case 'h':
+                PrintUsage();
+                return 0;
+            case '?':
+                return 1;
+        }
+    }
+
+    /* verify we got all positional arguments */
+    if (!argv[optind]) {
+        PrintErrAndExit("missing SRC_BASE");
+    }
+    if (!argv[optind + 1]) {
+        PrintErrAndExit("missing TGT_BASE");
+    }
+    if (!argv[optind + 2]) {
+        PrintErrAndExit("missing NUM");
+    }
+
+    try {
+        std::string src_base_str(argv[optind]);
+        std::string tgt_base_str(argv[optind + 1]);
+        std::string num(argv[optind + 2]);
+
+        dhb::NumSystem src_base = GetNumSystem(src_base_str);
+        dhb::NumSystem tgt_base = GetNumSystem(tgt_base_str);
+        std::cout << dhb::ConvertBase(num, src_base, tgt_base);
+    } catch (const std::invalid_argument& e) {
+        PrintErrAndExit("format of input num is invalid");
+    } catch (const std::logic_error& e) {
+        PrintErrAndExit("invalid base value '" + std::string(e.what()) + "'");
+    } catch (const std::exception& e) {
+        PrintErrAndExit(e.what());
+    }
 
     return 0;
 }

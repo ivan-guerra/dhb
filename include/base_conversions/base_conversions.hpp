@@ -16,8 +16,8 @@ enum NumSystem : int {
  * Convert the input \p num string from the source to target number system.
  *
  * @param [in] num A string in the \p src number system notation.
- * @param [in] src The source NumberSystem
- * @param [in] target The target NumberSystem.
+ * @param [in] src The source NumSystem
+ * @param [in] target The target NumSystem.
  *
  * @throws std::invalid_argument Triggered by an invalid \p num input (e.g., an
  *                               empty string or number with invalid format).

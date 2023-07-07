@@ -10,6 +10,10 @@ target_sources(${PROJECT_NAME}
     PRIVATE dhb.cc
 )
 
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE base_conversions
+)
+
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${DHB_BIN_DIR}
 )
