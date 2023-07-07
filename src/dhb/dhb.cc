@@ -1,18 +1,15 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#include <algorithm>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include <numeric>
 #include <sstream>
-#include <stack>
+#include <stdexcept>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 #include "base_conversions/base_conversions.hpp"
+#include "util/dhb_util.hpp"
 
 static void PrintUsage() {
     std::cout << "usage: dhb [OPTION]... SRC_BASE TGT_BASE NUM" << std::endl;
@@ -49,52 +46,6 @@ static void PrintErrAndExit(const std::string& err) {
     std::cerr << "error: " << err << std::endl;
     std::cerr << "try 'dhb --help' for more information" << std::endl;
     exit(EXIT_FAILURE);
-}
-
-static dhb::NumSystem GetNumSystem(const std::string& base) {
-    static const std::unordered_map<std::string, dhb::NumSystem>
-        kNumSystemLookup = {
-            {"bin", dhb::kBin}, {"dec", dhb::kDec}, {"hex", dhb::kHex}};
-
-    if (!kNumSystemLookup.count(base)) {
-        throw std::logic_error(base);
-    }
-    return kNumSystemLookup.at(base);
-}
-
-static std::string GroupDigits(const std::string& num, int grouping) {
-    if ((grouping <= 0) || (grouping >= static_cast<int>(num.size()))) {
-        return num;
-    }
-
-    std::stack<char> digits;
-    for (const char& c : num) {
-        digits.push(c);
-    }
-
-    std::string group;
-    std::vector<std::string> groups;
-    while (!digits.empty()) {
-        group += digits.top();
-        digits.pop();
-
-        if (static_cast<int>(group.size()) == grouping) {
-            std::reverse(group.begin(), group.end());
-            groups.push_back(group);
-            group = "";
-        }
-    }
-
-    if (!group.empty()) {
-        std::reverse(group.begin(), group.end());
-        groups.push_back(group);
-    }
-
-    std::reverse(groups.begin(), groups.end());
-    return std::accumulate(groups.begin(), groups.end(), std::string(),
-                           [](const std::string& a, const std::string& b) {
-                               return a + (a.empty() ? "" : " ") + b;
-                           });
 }
 
 int main(int argc, char** argv) {
@@ -145,8 +96,8 @@ int main(int argc, char** argv) {
         std::string num(argv[optind + 2]);
 
         /* identify the source and target bases */
-        dhb::NumSystem src_base = GetNumSystem(src_base_str);
-        dhb::NumSystem tgt_base = GetNumSystem(tgt_base_str);
+        dhb::NumSystem src_base = dhb::GetNumSystem(src_base_str);
+        dhb::NumSystem tgt_base = dhb::GetNumSystem(tgt_base_str);
 
         /* perform the base conversion */
         std::string converted_num = dhb::ConvertBase(num, src_base, tgt_base);
@@ -158,7 +109,7 @@ int main(int argc, char** argv) {
 
         int grouping = grouping_str.empty() ? 0 : std::stoi(grouping_str);
 
-        std::cout << GroupDigits(ss.str(), grouping) << std::endl;
+        std::cout << dhb::GroupDigits(ss.str(), grouping) << std::endl;
     } catch (const std::invalid_argument& e) {
         PrintErrAndExit("invalid number format, check input and arg nums");
     } catch (const std::logic_error& e) {

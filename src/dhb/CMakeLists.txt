@@ -12,6 +12,7 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE base_conversions
+    PRIVATE util
 )
 
 install(TARGETS ${PROJECT_NAME}
