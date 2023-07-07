@@ -1,7 +1,9 @@
 #include "util/dhb_util.hpp"
 
 #include <algorithm>
+#include <iomanip>
 #include <numeric>
+#include <sstream>
 #include <stack>
 #include <stdexcept>
 #include <string>
@@ -56,6 +58,17 @@ std::string GroupDigits(const std::string& num, int grouping) {
                            [](const std::string& a, const std::string& b) {
                                return a + (a.empty() ? "" : " ") + b;
                            });
+}
+
+std::string SetWidth(const std::string& num, int width) {
+    if (width <= 0) {
+        return num;
+    }
+
+    std::stringstream ss(num);
+    ss << std::setfill('0') << std::setw(width) << num;
+
+    return ss.str();
 }
 
 }  // namespace dhb

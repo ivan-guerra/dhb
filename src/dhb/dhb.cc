@@ -2,9 +2,7 @@
 #include <unistd.h>
 
 #include <cstdlib>
-#include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -101,15 +99,16 @@ int main(int argc, char** argv) {
 
         /* perform the base conversion */
         std::string converted_num = dhb::ConvertBase(num, src_base, tgt_base);
-        std::stringstream ss(converted_num);
 
         /* adjust the width of the converted number */
         int width = width_str.empty() ? 0 : std::stoi(width_str);
-        ss << std::setfill('0') << std::setw(width) << converted_num;
+        converted_num = dhb::SetWidth(converted_num, width);
 
+        /* split converted_num into grouping sized chunks */
         int grouping = grouping_str.empty() ? 0 : std::stoi(grouping_str);
+        converted_num = dhb::GroupDigits(converted_num, grouping);
 
-        std::cout << dhb::GroupDigits(ss.str(), grouping) << std::endl;
+        std::cout << converted_num << std::endl;
     } catch (const std::invalid_argument& e) {
         PrintErrAndExit("invalid number format, check input and arg nums");
     } catch (const std::logic_error& e) {
