@@ -35,7 +35,7 @@ static void PrintUsage() {
     std::cout << "\t-h,--help\n\t\tprint this help message" << std::endl;
 
     std::cout << "EXAMPLES" << std::endl;
-    std::cout << "\tdhb hex dec 0xDEADBEED --> 3735928559" << std::endl;
+    std::cout << "\tdhb hex dec 0xDEADBEEF --> 3735928559" << std::endl;
     std::cout << "\tdhb dec bin 42 --> 101010" << std::endl;
     std::cout << "\tdhb -g 4 dec hex 3735928559 --> DEAD BEEF" << std::endl;
     std::cout << "\tdhb -g 4 -w 12 dec hex 3735928559 --> 0000 DEAD BEEF"
