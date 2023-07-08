@@ -14,3 +14,4 @@ set_target_properties(gmock PROPERTIES FOLDER extern)
 set_target_properties(gmock_main PROPERTIES FOLDER extern)
 
 add_subdirectory(util)
+add_subdirectory(base_conversions)
