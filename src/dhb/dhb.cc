@@ -22,6 +22,8 @@ static void PrintUsage() {
     std::cout
         << "\tTGT_BASE\n\t\toutput number base, one of 'bin', 'dec', or 'hex'"
         << std::endl;
+    std::cout << "\tNUM\n\t\tan arbitrarily large positive integer"
+              << std::endl;
 
     std::cout << "OPTIONS" << std::endl;
     std::cout << "\t-g,--grouping\n\t\thow to visually group the digits in the "
