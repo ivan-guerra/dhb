@@ -11,6 +11,7 @@ static const std::string kHexNum("2A0000000000000000");
 static const std::string kBinNum(
     "1010100000000000000000000000000000000000000000000000000000000000000000");
 static const std::string kDecNum("774763251095801167872");
+static const std::string kOctNum("124000000000000000000000");
 
 TEST(BaseConvTests, ConvertBaseReturnsDecFromHex) {
     ASSERT_EQ(
@@ -21,6 +22,12 @@ TEST(BaseConvTests, ConvertBaseReturnsDecFromHex) {
 TEST(BaseConvTests, ConvertBaseReturnsDecFromBin) {
     ASSERT_EQ(
         dhb::ConvertBase(kBinNum, dhb::NumSystem::kBin, dhb::NumSystem::kDec),
+        kDecNum);
+}
+
+TEST(BaseConvTests, ConvertBaseReturnsDecFromOct) {
+    ASSERT_EQ(
+        dhb::ConvertBase(kOctNum, dhb::NumSystem::kOct, dhb::NumSystem::kDec),
         kDecNum);
 }
 
@@ -36,6 +43,30 @@ TEST(BaseConvTests, ConvertBaseReturnsBinFromHex) {
         kBinNum);
 }
 
+TEST(BaseConvTests, ConvertBaseReturnsBinFromOct) {
+    ASSERT_EQ(
+        dhb::ConvertBase(kOctNum, dhb::NumSystem::kOct, dhb::NumSystem::kBin),
+        kBinNum);
+}
+
+TEST(BaseConvTests, ConvertBaseReturnsOctFromDec) {
+    ASSERT_EQ(
+        dhb::ConvertBase(kDecNum, dhb::NumSystem::kDec, dhb::NumSystem::kOct),
+        kOctNum);
+}
+
+TEST(BaseConvTests, ConvertBaseReturnsOctFromHex) {
+    ASSERT_EQ(
+        dhb::ConvertBase(kHexNum, dhb::NumSystem::kHex, dhb::NumSystem::kOct),
+        kOctNum);
+}
+
+TEST(BaseConvTests, ConvertBaseReturnsOctFromBin) {
+    ASSERT_EQ(
+        dhb::ConvertBase(kBinNum, dhb::NumSystem::kBin, dhb::NumSystem::kOct),
+        kOctNum);
+}
+
 TEST(BaseConvTests, ConvertBaseReturnsHexFromDec) {
     ASSERT_EQ(
         dhb::ConvertBase(kDecNum, dhb::NumSystem::kDec, dhb::NumSystem::kHex),
@@ -45,6 +76,12 @@ TEST(BaseConvTests, ConvertBaseReturnsHexFromDec) {
 TEST(BaseConvTests, ConvertBaseReturnsHexFromBin) {
     ASSERT_EQ(
         dhb::ConvertBase(kBinNum, dhb::NumSystem::kBin, dhb::NumSystem::kHex),
+        kHexNum);
+}
+
+TEST(BaseConvTests, ConvertBaseReturnsHexFromOct) {
+    ASSERT_EQ(
+        dhb::ConvertBase(kOctNum, dhb::NumSystem::kOct, dhb::NumSystem::kHex),
         kHexNum);
 }
 
@@ -66,6 +103,12 @@ TEST(BaseConvTests, ConvertBaseReturnsDecFromDec) {
         kDecNum);
 }
 
+TEST(BaseConvTests, ConvertBaseReturnsOctFromOct) {
+    ASSERT_EQ(
+        dhb::ConvertBase(kOctNum, dhb::NumSystem::kOct, dhb::NumSystem::kOct),
+        kOctNum);
+}
+
 TEST(BaseConvTests, ConvertBaseThrowsInvalidArgumentWhenGivenAnInvalidDecNum) {
     ASSERT_THROW(
         dhb::ConvertBase(kHexNum, dhb::NumSystem::kDec, dhb::NumSystem::kHex),
@@ -81,5 +124,11 @@ TEST(BaseConvTests, ConvertBaseThrowsInvalidArgumentWhenGivenAnInvalidBinNum) {
 TEST(BaseConvTests, ConvertBaseThrowsInvalidArgumentWhenGivenAnInvalidHexNum) {
     ASSERT_THROW(
         dhb::ConvertBase("BOOM", dhb::NumSystem::kHex, dhb::NumSystem::kDec),
+        std::invalid_argument);
+}
+
+TEST(BaseConvTests, ConvertBaseThrowsInvalidArgumentWhenGivenAnInvalidOctNum) {
+    ASSERT_THROW(
+        dhb::ConvertBase("BOOM", dhb::NumSystem::kOct, dhb::NumSystem::kDec),
         std::invalid_argument);
 }

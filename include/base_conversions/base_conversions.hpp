@@ -10,6 +10,7 @@ enum NumSystem : int {
     kDec = 10, /**< Decimal or base 10. */
     kHex = 16, /**< Hexadecimal or base 16. */
     kBin = 2,  /**< Binary or base 2. */
+    kOct = 8,  /**< Octal or base 8. */
 };
 
 /**

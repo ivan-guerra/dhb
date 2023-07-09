@@ -10,10 +10,12 @@ TEST(UtilTests, GetNumSystemCanRetrieveNumSystemForValidBase) {
     const std::string kHexBase("hex");
     const std::string kBinBase("bin");
     const std::string kDecBase("dec");
+    const std::string kOctBase("oct");
 
     ASSERT_EQ(dhb::GetNumSystem(kHexBase), dhb::NumSystem::kHex);
     ASSERT_EQ(dhb::GetNumSystem(kBinBase), dhb::NumSystem::kBin);
     ASSERT_EQ(dhb::GetNumSystem(kDecBase), dhb::NumSystem::kDec);
+    ASSERT_EQ(dhb::GetNumSystem(kOctBase), dhb::NumSystem::kOct);
 }
 
 TEST(UtilTests, GetNumSystemThrowsLogicErrorOnInvalidBase) {
@@ -89,6 +91,13 @@ TEST(UtilTests, StripPrefixStripsBinPrefix) {
     const std::string kBinNumNoPrefix("11110000");
 
     ASSERT_EQ(dhb::StripPrefix(kBinNumWithPrefix), kBinNumNoPrefix);
+}
+
+TEST(UtilTests, StripPrefixStripsOctPrefix) {
+    const std::string kOctNumWithPrefix("0o12");
+    const std::string kOctNumNoPrefix("12");
+
+    ASSERT_EQ(dhb::StripPrefix(kOctNumWithPrefix), kOctNumNoPrefix);
 }
 
 TEST(UtilTests,

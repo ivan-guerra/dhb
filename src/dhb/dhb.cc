@@ -11,17 +11,18 @@
 
 static void PrintUsage() {
     std::cout << "usage: dhb [OPTION]... SRC_BASE TGT_BASE NUM" << std::endl;
-    std::cout << "convert between numbers in decimal, binary, or hexadecimal"
-              << std::endl
-              << std::endl;
+    std::cout
+        << "convert between numbers in decimal, binary, octal, or hexadecimal"
+        << std::endl
+        << std::endl;
 
     std::cout << "REQUIRED ARGUMENTS" << std::endl;
-    std::cout
-        << "\tSRC_BASE\n\t\tinput number base, one of 'bin', 'dec', or 'hex'"
-        << std::endl;
-    std::cout
-        << "\tTGT_BASE\n\t\toutput number base, one of 'bin', 'dec', or 'hex'"
-        << std::endl;
+    std::cout << "\tSRC_BASE\n\t\tinput number base, one of 'bin', 'dec', "
+                 "'oct', or 'hex'"
+              << std::endl;
+    std::cout << "\tTGT_BASE\n\t\toutput number base, one of 'bin', 'dec', "
+                 "'oct', or 'hex'"
+              << std::endl;
     std::cout << "\tNUM\n\t\tan arbitrarily large positive integer"
               << std::endl;
 
@@ -36,7 +37,9 @@ static void PrintUsage() {
 
     std::cout << "EXAMPLES" << std::endl;
     std::cout << "\tdhb hex dec 0xDEADBEEF --> 3735928559" << std::endl;
-    std::cout << "\tdhb dec bin 42 --> 101010" << std::endl;
+    std::cout << "\tdhb dec bin 3735928559 --> 11011110101011011011111011101111"
+              << std::endl;
+    std::cout << "\tdhb dec oct 3735928559 --> 33653337357" << std::endl;
     std::cout << "\tdhb -g 4 dec hex 3735928559 --> DEAD BEEF" << std::endl;
     std::cout << "\tdhb -g 4 -w 12 dec hex 3735928559 --> 0000 DEAD BEEF"
               << std::endl;

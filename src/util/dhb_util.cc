@@ -16,8 +16,10 @@ namespace dhb {
 
 dhb::NumSystem GetNumSystem(const std::string& base) {
     static const std::unordered_map<std::string, dhb::NumSystem>
-        kNumSystemLookup = {
-            {"bin", dhb::kBin}, {"dec", dhb::kDec}, {"hex", dhb::kHex}};
+        kNumSystemLookup = {{"bin", dhb::NumSystem::kBin},
+                            {"dec", dhb::NumSystem::kDec},
+                            {"hex", dhb::NumSystem::kHex},
+                            {"oct", dhb::NumSystem::kOct}};
 
     if (!kNumSystemLookup.count(base)) {
         throw std::logic_error(base);
@@ -75,12 +77,14 @@ std::string StripPrefix(const std::string& num) {
     const std::size_t kCommonPrefixLen = 2;
     const std::string kHexPrefix("0x");
     const std::string kBinPrefix("0b");
+    const std::string kOctPrefix("0o");
     if (num.size() <= kCommonPrefixLen) {
         return num;
     }
 
     std::string prefix = num.substr(0, kCommonPrefixLen);
-    if ((kHexPrefix == prefix) || (kBinPrefix == prefix)) {
+    if ((kHexPrefix == prefix) || (kBinPrefix == prefix) ||
+        (kOctPrefix == prefix)) {
         return num.substr(prefix.size());
     }
     return num;
