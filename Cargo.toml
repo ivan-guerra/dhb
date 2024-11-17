@@ -1,0 +1,9 @@
+[package]
+name = "nconv"
+version = "0.1.0"
+edition = "2021"
+description = "CLI tool that converts between numbers in decimal, binary, octal, or hexadecimal."
+license = "Unlicense"
+
+[dependencies]
+clap = {version = "4.5.20", features = ["derive"]}
