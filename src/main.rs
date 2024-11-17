@@ -21,8 +21,8 @@ struct Args {
     #[arg(
         short = 'g',
         long,
-        default_value_t = 1, 
-        value_parser = clap::value_parser!(u32).range(1..=256),
+        default_value_t = 0, 
+        value_parser = clap::value_parser!(u32).range(0..=256),
         help = "how to visually group the digits in the output number"
     )]
     grouping: u32,

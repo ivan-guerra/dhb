@@ -1,7 +1,7 @@
 use clap::ValueEnum;
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
 pub enum NumSystem {
     Bin = 2,
     Oct = 8,
@@ -46,7 +46,7 @@ impl Display for ConversionError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             ConversionError::InvalidDigit(c) => write!(f, "invalid digit: '{}'", c),
-            ConversionError::NumberOverflow => write!(f, "number overflow"),
+            ConversionError::NumberOverflow => write!(f, "input value exceeds 128 bit limit"),
             ConversionError::InvalidBase => write!(f, "invalid base"),
         }
     }
@@ -61,9 +61,12 @@ pub fn convert_base(
 
     // Handle prefixes and determine actual number string
     let (num_str, inferred_src) = match num.to_lowercase().as_str() {
-        s if s.starts_with("0x") => (&num[2..], Some(NumSystem::Hex)),
-        s if s.starts_with("0o") => (&num[2..], Some(NumSystem::Oct)),
-        s if s.starts_with("0b") => (&num[2..], Some(NumSystem::Bin)),
+        s if s.starts_with("0x") && src == NumSystem::Hex => (&num[2..], Some(NumSystem::Hex)),
+        s if s.starts_with("0o") && src == NumSystem::Oct => (&num[2..], Some(NumSystem::Oct)),
+        s if s.starts_with("0b") && src == NumSystem::Bin => (&num[2..], Some(NumSystem::Bin)),
+        s if s.starts_with("0x") || s.starts_with("0o") || s.starts_with("0b") => {
+            return Err(ConversionError::InvalidBase)
+        }
         _ => (num, None),
     };
 
@@ -117,10 +120,14 @@ pub fn convert_base(
 }
 
 pub fn group_digits(num: &str, grouping: u32) -> String {
+    if grouping == 0 {
+        return num.to_string();
+    }
+
     let mut result = num.chars().rev().collect::<String>();
     let mut i = grouping as usize;
     while i < result.len() {
-        result.insert(i, '_');
+        result.insert(i, ' ');
         i += grouping as usize + 1;
     }
     result.chars().rev().collect()
@@ -137,9 +144,172 @@ pub fn pad_width(num: &str, width: u32) -> String {
 
 pub fn run(config: &Config) -> Result<(), ConversionError> {
     let result = convert_base(&config.number, config.src_base, config.tgt_base)?;
-    let result = group_digits(&result, config.grouping);
     let result = pad_width(&result, config.width);
+    let result = group_digits(&result, config.grouping);
     println!("{}", result);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn convert_base_handles_valid_prefixes_correctly() -> Result<(), ConversionError> {
+        assert_eq!(convert_base("0xFF", NumSystem::Hex, NumSystem::Dec)?, "255");
+        assert_eq!(
+            convert_base("0b1010", NumSystem::Bin, NumSystem::Dec)?,
+            "10"
+        );
+        assert_eq!(convert_base("0o77", NumSystem::Oct, NumSystem::Dec)?, "63");
+        Ok(())
+    }
+
+    #[test]
+    fn convert_base_returns_invalid_base_error_when_given_incorrect_src_prefix() {
+        // Test hex prefix with binary base
+        match convert_base("0xFF", NumSystem::Bin, NumSystem::Dec) {
+            Err(ConversionError::InvalidBase) => (),
+            _ => panic!("Expected InvalidBase error for hex prefix with binary base"),
+        }
+
+        // Test binary prefix with hex base
+        match convert_base("0b10", NumSystem::Hex, NumSystem::Dec) {
+            Err(ConversionError::InvalidBase) => (),
+            _ => panic!("Expected InvalidBase error for binary prefix with hex base"),
+        }
+
+        // Test octal prefix with binary base
+        match convert_base("0o77", NumSystem::Bin, NumSystem::Dec) {
+            Err(ConversionError::InvalidBase) => (),
+            _ => panic!("Expected InvalidBase error for octal prefix with binary base"),
+        }
+    }
+
+    #[test]
+    fn convert_base_successfully_converts_when_prefix_is_excluded() -> Result<(), ConversionError> {
+        // Non-prefixed numbers should work
+        assert_eq!(convert_base("FF", NumSystem::Hex, NumSystem::Dec)?, "255");
+        assert_eq!(convert_base("1010", NumSystem::Bin, NumSystem::Dec)?, "10");
+        assert_eq!(convert_base("77", NumSystem::Oct, NumSystem::Dec)?, "63");
+        Ok(())
+    }
+
+    #[test]
+    fn convert_base_returns_invalid_digit_error_on_invalid_digits() {
+        assert!(matches!(
+            convert_base("0xGG", NumSystem::Hex, NumSystem::Dec),
+            Err(ConversionError::InvalidDigit(_))
+        ));
+        assert!(matches!(
+            convert_base("0b12", NumSystem::Bin, NumSystem::Dec),
+            Err(ConversionError::InvalidDigit(_))
+        ));
+        assert!(matches!(
+            convert_base("0o89", NumSystem::Oct, NumSystem::Dec),
+            Err(ConversionError::InvalidDigit(_))
+        ));
+    }
+
+    #[test]
+    fn convert_base_returns_number_overflow_when_given_greater_than_128_bit_number() {
+        // Test with even larger numbers that will definitely overflow
+        let large_hex = format!("0x{}", "F".repeat(256)); // Much larger hex number
+        let large_bin = format!("0b{}", "1".repeat(1024)); // Much larger binary number
+        assert!(matches!(
+            convert_base(&large_hex, NumSystem::Hex, NumSystem::Dec),
+            Err(ConversionError::NumberOverflow)
+        ));
+        assert!(matches!(
+            convert_base(&large_bin, NumSystem::Bin, NumSystem::Dec),
+            Err(ConversionError::NumberOverflow)
+        ));
+    }
+
+    #[test]
+    fn convert_base_successfull_converts_0_to_all_bases() -> Result<(), ConversionError> {
+        assert_eq!(convert_base("0x0", NumSystem::Hex, NumSystem::Dec)?, "0");
+        assert_eq!(convert_base("0b0", NumSystem::Bin, NumSystem::Dec)?, "0");
+        assert_eq!(convert_base("0o0", NumSystem::Oct, NumSystem::Dec)?, "0");
+        Ok(())
+    }
+
+    #[test]
+    fn pad_width_successfully_applies_padding() {
+        assert_eq!(pad_width("42", 4), "0042");
+        assert_eq!(pad_width("123", 5), "00123");
+        assert_eq!(pad_width("7", 3), "007");
+    }
+
+    #[test]
+    fn pad_width_does_not_apply_padding_when_input_is_wide_enough() {
+        assert_eq!(pad_width("123", 3), "123");
+        assert_eq!(pad_width("456", 2), "456");
+        assert_eq!(pad_width("789", 1), "789");
+    }
+
+    #[test]
+    fn pad_width_successfully_pads_empty_str() {
+        assert_eq!(pad_width("", 3), "000");
+        assert_eq!(pad_width("", 1), "0");
+        assert_eq!(pad_width("0", 2), "00");
+    }
+
+    #[test]
+    fn pad_width_ignores_request_for_zero_padding() {
+        assert_eq!(pad_width("123", 0), "123");
+    }
+
+    #[test]
+    fn pad_width_successuly_pads_large_numbers() {
+        assert_eq!(
+            pad_width("12345678901234567890", 25),
+            "0000012345678901234567890"
+        );
+        assert_eq!(
+            pad_width("12345678901234567890", 20),
+            "12345678901234567890"
+        );
+    }
+
+    #[test]
+    fn group_digits_successfully_groups_digits() {
+        assert_eq!(group_digits("1234", 3), "1 234");
+        assert_eq!(group_digits("123456", 3), "123 456");
+        assert_eq!(group_digits("1234567", 3), "1 234 567");
+    }
+
+    #[test]
+    fn group_digits_can_handle_too_few_digits() {
+        assert_eq!(group_digits("", 3), "");
+        assert_eq!(group_digits("1", 3), "1");
+        assert_eq!(group_digits("12", 3), "12");
+        assert_eq!(group_digits("123", 3), "123");
+    }
+
+    #[test]
+    fn group_digits_successfully_groups_digits_of_diff_sizes() {
+        assert_eq!(group_digits("1234", 2), "12 34");
+        assert_eq!(group_digits("123456", 2), "12 34 56");
+        assert_eq!(group_digits("12345", 4), "1 2345");
+    }
+
+    #[test]
+    fn group_digits_makes_exact_groupings() {
+        assert_eq!(group_digits("123123", 3), "123 123");
+        assert_eq!(group_digits("12341234", 4), "1234 1234");
+    }
+
+    #[test]
+    fn group_digits_groups_large_numbers_successfully() {
+        assert_eq!(
+            group_digits("1234567890123456789", 3),
+            "1 234 567 890 123 456 789"
+        );
+        assert_eq!(
+            group_digits("12345678901234567890", 4),
+            "1234 5678 9012 3456 7890"
+        );
+    }
 }
