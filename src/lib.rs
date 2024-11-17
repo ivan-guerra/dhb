@@ -1,19 +1,65 @@
+//! A number base conversion library and command-line tool.
+//!
+//! `nconv` provides functionality to convert numbers between different numeric bases
+//! (binary, octal, decimal, and hexadecimal) with additional formatting options.
+//!
+//! # Features
+//!
+//! - Convert between binary (base-2), octal (base-8), decimal (base-10), and hexadecimal (base-16)
+//! - Support for common number prefixes (0b, 0o, 0x)
+//! - Configurable output width with zero padding
+//! - Optional digit grouping for improved readability
+//!
+//! # Examples
+//!
+//! ```
+//! use nconv::{Config, NumSystem};
+//!
+//! let config = Config {
+//!     number: String::from("255"),
+//!     src_base: NumSystem::Dec,
+//!     tgt_base: NumSystem::Hex,
+//!     width: 4,
+//!     grouping: 0,
+//! };
+//!
+//! nconv::run(&config).unwrap();  // Prints: 00FF
+//! ```
+//!
+//! # Error Handling
+//!
+//! The library uses a custom `ConversionError` type to handle various error cases:
+//! - Invalid digits for the given base
+//! - Number overflow
+//! - Invalid base combinations
+//! - Mismatched prefixes
 use clap::ValueEnum;
 use std::fmt::Display;
 
+/// Represents the supported number systems for conversion.
 #[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
 pub enum NumSystem {
+    /// Binary number system (base 2).
     Bin = 2,
+    /// Octal number system (base 8).
     Oct = 8,
+    /// Decimal number system (base 10).
     Dec = 10,
+    /// Hexadecimal number system (base 16).
     Hex = 16,
 }
 
+/// Configuration for number conversion.
 pub struct Config {
+    /// The source number system to convert from.
     pub src_base: NumSystem,
+    /// The target number system to convert to.
     pub tgt_base: NumSystem,
+    /// The input number as a string.
     pub number: String,
+    /// The size of digit grouping (0 for no grouping).
     pub grouping: u32,
+    /// The minimum width for zero-padding the output.
     pub width: u32,
 }
 
@@ -35,10 +81,14 @@ impl Config {
     }
 }
 
+/// Errors that can occur during number system conversion.
 #[derive(Debug)]
 pub enum ConversionError {
+    /// Invalid digit found in input number (contains the invalid character).
     InvalidDigit(char),
+    /// Number is too large to be represented (exceeds 128 bit limit).
     NumberOverflow,
+    /// Invalid base specified for conversion.
     InvalidBase,
 }
 
@@ -52,6 +102,37 @@ impl Display for ConversionError {
     }
 }
 
+/// Converts a number string from one numeric base to another.
+///
+/// This function supports conversion between binary, octal, decimal, and hexadecimal number systems.
+/// It recognizes common prefixes (0b, 0o, 0x) when they match the source base.
+///
+/// # Arguments
+///
+/// * `num` - A string slice containing the number to convert
+/// * `src` - The source number system (base) of the input
+/// * `target` - The target number system (base) for the output
+///
+/// # Returns
+///
+/// * `Ok(String)` - The converted number as a string in the target base
+/// * `Err(ConversionError)` - If the conversion fails due to:
+///   - Invalid digits for the source base
+///   - Number overflow
+///   - Invalid base combination
+///   - Mismatched prefix and source base
+///
+/// # Examples
+///
+/// ```
+/// use nconv::{convert_base, NumSystem};
+///
+/// let result = convert_base("1010", NumSystem::Bin, NumSystem::Dec);
+/// assert_eq!(result.unwrap(), "10");
+///
+/// let hex_result = convert_base("0xFF", NumSystem::Hex, NumSystem::Dec);
+/// assert_eq!(hex_result.unwrap(), "255");
+/// ```
 pub fn convert_base(
     num: &str,
     src: NumSystem,
@@ -119,6 +200,14 @@ pub fn convert_base(
     Ok(result.iter().rev().collect())
 }
 
+/// Groups digits in a number string with specified spacing.
+///
+/// # Arguments
+/// * `num` - The number string to group.
+/// * `grouping` - Number of digits per group (0 for no grouping).
+///
+/// # Returns
+/// A new string with digits grouped using spaces.
 pub fn group_digits(num: &str, grouping: u32) -> String {
     if grouping == 0 {
         return num.to_string();
@@ -133,6 +222,14 @@ pub fn group_digits(num: &str, grouping: u32) -> String {
     result.chars().rev().collect()
 }
 
+/// Pads a number string with leading zeros to reach specified width.
+///
+/// # Arguments
+/// * `num` - The number string to pad.
+/// * `width` - The minimum width to pad to.
+///
+/// # Returns
+/// A new string padded with leading zeros if needed.
 pub fn pad_width(num: &str, width: u32) -> String {
     if num.len() < width as usize {
         let padding = "0".repeat(width as usize - num.len());
@@ -142,6 +239,38 @@ pub fn pad_width(num: &str, width: u32) -> String {
     }
 }
 
+/// Executes the number conversion process based on the provided configuration.
+///
+/// This function performs the following steps:
+/// 1. Converts the number from source base to target base.
+/// 2. Pads the result to the specified width.
+/// 3. Groups digits according to the grouping configuration.
+/// 4. Prints the final result to stdout.
+///
+/// # Arguments
+///
+/// * `config` - Reference to a Config struct containing conversion parameters.
+///
+/// # Returns
+///
+/// * `Ok(())` - If the conversion and output were successful.
+/// * `Err(ConversionError)` - If any step in the conversion process fails.
+///
+/// # Examples
+///
+/// ```
+/// use nconv::{Config, NumSystem};
+///
+/// let config = Config {
+///     number: String::from("1010"),
+///     src_base: NumSystem::Bin,
+///     tgt_base: NumSystem::Dec,
+///     width: 0,
+///     grouping: 0,
+/// };
+///
+/// nconv::run(&config).unwrap();  // Prints: 10
+/// ```
 pub fn run(config: &Config) -> Result<(), ConversionError> {
     let result = convert_base(&config.number, config.src_base, config.tgt_base)?;
     let result = pad_width(&result, config.width);
